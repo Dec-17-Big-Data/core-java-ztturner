@@ -1,8 +1,12 @@
 package com.revature.eval.java.core;
 
 import java.time.temporal.Temporal;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class EvaluationService {
 
@@ -30,8 +34,15 @@ public class EvaluationService {
 	 * @return
 	 */
 	public String acronym(String phrase) {
-		// TODO Write an implementation for this method declaration
-		return null;
+		Pattern nonWordRegex = Pattern.compile("\\W+");
+		String[] words = nonWordRegex.split(phrase); // split the words based the non-word regex
+		String acronym = "";
+		
+		for(int w = 0; w < words.length; w++) {
+			acronym = acronym + words[w].charAt(0);
+		}
+		
+		return acronym.toUpperCase();
 	}
 
 	/**
@@ -84,18 +95,17 @@ public class EvaluationService {
 		}
 
 		public boolean isEquilateral() {
-			// TODO Write an implementation for this method declaration
-			return false;
+			// It can be determined that all sides are equal when A = B and B = C, because
+			// A = C must then be true			
+			return sideOne == sideTwo && sideTwo == sideThree;
 		}
 
-		public boolean isIsosceles() {
-			// TODO Write an implementation for this method declaration
-			return false;
+		public boolean isIsosceles() {			
+			return sideOne == sideTwo || sideTwo == sideThree || sideOne == sideThree;
 		}
 
 		public boolean isScalene() {
-			// TODO Write an implementation for this method declaration
-			return false;
+			return sideOne != sideTwo && sideTwo != sideThree && sideOne != sideThree;
 		}
 
 	}
@@ -116,8 +126,87 @@ public class EvaluationService {
 	 * @return
 	 */
 	public int getScrabbleScore(String string) {
-		// TODO Write an implementation for this method declaration
-		return 0;
+		HashMap<String, Integer> scrabbleMap = new HashMap<String, Integer>();
+		HashMap<String, Integer> wordLetterCountMap = new HashMap<String, Integer>();
+		
+		String[][] letters = {
+				new String[] { 
+					"a", "e", "i", "o", "u", "l", "n", "r", "s", "t"
+				},
+				new String[] {
+					"d", "g"
+				},
+				new String[] {
+					"b", "c", "m", "p"
+				},
+				new String[] {
+					"f", "h", "v", "w", "y"
+				},
+				new String[] {
+					"k"
+				},
+				new String[] {
+					"j", "x"
+				},
+				new String[] {
+					"q", "z"
+				}
+		};
+		
+		Integer[] pointValues = {
+				new Integer(1),
+				new Integer(2),
+				new Integer(3),
+				new Integer(4),
+				new Integer(5),
+				new Integer(8),
+				new Integer(10)
+		};
+		
+		int totalScore = 0;
+		
+		// put the letters and their values in the scrabble map
+		for(int g = 0; g < letters.length; g++)
+		{
+			for(int l = 0; l < letters[g].length; l++)
+			{
+				scrabbleMap.put(letters[g][l], pointValues[g]);
+			}
+		}
+		
+		// trim all non-word and digit characters from the string
+		String trimmedWord = string.replaceAll("\\W", "").replaceAll("\\d", "").toLowerCase();
+		
+		String currentChar;
+		Integer currentCharCount;
+		
+		// go through the given word and get the letter count
+		for(int letter = 0; letter < trimmedWord.length(); letter++)
+		{
+			currentChar = Character.toString(trimmedWord.charAt(letter));
+			
+			// if the letter has been found in the word already
+			if(wordLetterCountMap.containsKey(currentChar))	{				
+				// increase the times the letter was found by 1
+				currentCharCount = wordLetterCountMap.get(currentChar) + Integer.valueOf(1);				
+			}
+			// if the letter has not been found in the word already
+			else {
+				currentCharCount = new Integer(1); // make an integer with a value of 1
+			}
+			
+			// put the new letter count in the map
+			wordLetterCountMap.put(currentChar, currentCharCount);
+		}
+		
+		// calculate the total score
+		for(String l: wordLetterCountMap.keySet())
+		{
+			// for each character in the counted letter set, multiply the value and letter count and add to the total
+			totalScore = totalScore + (wordLetterCountMap.get(l) * scrabbleMap.get(l));
+		}
+		
+		return totalScore;
 	}
 
 	/**
@@ -266,8 +355,23 @@ public class EvaluationService {
 	 * @return
 	 */
 	public boolean isArmstrongNumber(int input) {
-		// TODO Write an implementation for this method declaration
-		return false;
+		String convertedInput = Integer.toString(input);
+		int numDigits = convertedInput.length();
+		int digitValue;
+		int sumOfDigits = 0;
+		boolean isArmstrong = false;
+		
+		for(int d = 0; d < numDigits; d++) {
+			digitValue = Integer.valueOf(Character.toString(convertedInput.charAt(d)));
+			sumOfDigits = sumOfDigits + (int)(Math.pow(digitValue, numDigits));
+		}
+		
+		if(sumOfDigits == input)
+		{
+			isArmstrong = true;
+		}
+		
+		return isArmstrong;
 	}
 
 	/**
@@ -320,7 +424,7 @@ public class EvaluationService {
 		}
 
 		public String rotate(String string) {
-			// TODO Write an implementation for this method declaration
+			// TODO Write an implementation for this method declaration			
 			return null;
 		}
 
@@ -415,8 +519,43 @@ public class EvaluationService {
 	 * @return
 	 */
 	public boolean isValidIsbn(String string) {
-		// TODO Write an implementation for this method declaration
-		return false;
+		String trimmedString = string.replaceAll("\\W+", "");
+		String lastCharacter = Character.toString(trimmedString.charAt(trimmedString.length() - 1));
+		int sumOfDigits = 0;
+		int digitValue;
+		int finalResult;
+		boolean isValid = false;
+		
+		// if the last character is a digit or X character, determine number of digits
+		// else, the ISBN is not valid
+		if(lastCharacter.matches("\\d|X")) {
+			// get only the digits from the string, excluding the last character
+			String digits = trimmedString.substring(0, trimmedString.length() - 1).replaceAll("\\D", "");
+			
+			// if the number of digits is less than 9, the ISBN is not valid
+			if(digits.length() == 9) {
+				for(int d = 0; d < digits.length(); d++) {
+					digitValue = Integer.valueOf(Character.toString(digits.charAt(d))) * (10 - d);
+					sumOfDigits = sumOfDigits + digitValue;
+				}
+				
+				if(lastCharacter.compareTo("X") == 0) {
+					sumOfDigits = sumOfDigits + 10;
+				}
+				else {
+					sumOfDigits = sumOfDigits + Integer.valueOf(lastCharacter);
+				}
+				
+				finalResult = sumOfDigits % 11;
+				
+				if(finalResult == 0)
+				{
+					isValid = true;
+				}
+			}
+		}
+		
+		return isValid;
 	}
 
 	/**
@@ -433,8 +572,29 @@ public class EvaluationService {
 	 * @return
 	 */
 	public boolean isPangram(String string) {
-		// TODO Write an implementation for this method declaration
-		return false;
+		String trimmedString = string.replaceAll("\\s+", "").toLowerCase();
+		HashSet<Character> letters = new HashSet<Character>();
+		boolean pangram = false;
+		int stringIndex = 0;
+		
+		if(trimmedString.length() >= 26) {
+			while(stringIndex < trimmedString.length()) {
+				if(!letters.contains(Character.valueOf(trimmedString.charAt(stringIndex)))) {
+					letters.add(Character.valueOf(trimmedString.charAt(stringIndex)));
+					
+					// if all the letters are in the set, set pangram to true and break
+					if(letters.size() == 26) {
+						pangram = true;
+						break;
+					}
+				}
+				
+				stringIndex++;
+			}
+		}
+		
+		
+		return pangram;
 	}
 
 	/**
