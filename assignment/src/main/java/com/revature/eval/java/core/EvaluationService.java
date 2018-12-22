@@ -132,6 +132,7 @@ public class EvaluationService {
 		Map<String, Integer> scrabbleMap = new HashMap<String, Integer>();
 		Map<String, Integer> wordLetterCountMap = new HashMap<String, Integer>();
 		
+		// setup the letters and point values for the map
 		String[][] letters = {
 				new String[] { 
 					"a", "e", "i", "o", "u", "l", "n", "r", "s", "t"
@@ -243,9 +244,31 @@ public class EvaluationService {
 	 * Note: As this exercise only deals with telephone numbers used in
 	 * NANP-countries, only 1 is considered a valid country code.
 	 */
-	public String cleanPhoneNumber(String string) {
-		// TODO Write an implementation for this method declaration
-		return null;
+	public String cleanPhoneNumber(String string) throws IllegalArgumentException {
+		String trimmedString = string.replaceAll("\\D+", ""); // remove all non-digit characters
+		Pattern phoneDigitsRegex = Pattern.compile("[2-9]\\d{2}[2-9]\\d{6}"); // look for this pattern in the trimmed string
+		
+		// improper number of digits should throw an exception
+		if(trimmedString.length() <= 9 || trimmedString.length() >= 12) {
+			throw new IllegalArgumentException("Invalid number of digits.");
+		}
+		
+		// if the country code is present, check that it is 1.
+		if(trimmedString.length() == 11) {
+			// if the country code is not 1, throw an exception
+			if(Integer.valueOf(trimmedString.charAt(0)) != 1) {
+				throw new IllegalArgumentException("Invalid country code.");
+			}
+			
+			trimmedString = trimmedString.substring(1); // else, remove the country code
+		}
+		
+		// if the string does not match the pattern, throw an exception
+		if(!trimmedString.matches(phoneDigitsRegex.pattern())) {
+			throw new IllegalArgumentException("Invalid digits.");
+		}
+		
+		return trimmedString;
 	}
 
 	/**
@@ -392,9 +415,70 @@ public class EvaluationService {
 	 * @param string
 	 * @return
 	 */
-	public String toPigLatin(String string) {
-		// TODO Write an implementation for this method declaration
-		return null;
+	public String toPigLatin(String string) {		
+		String[] splitString = string.split("[\\W]+"); // split the string by words
+		String tempString; // string for manipulation
+		
+		Pattern wordBreaks = Pattern.compile("[\\W]+"); // pattern to capture sets of characters between words
+		Pattern vowels = Pattern.compile("[aeiou]"); // pattern for finding vowels
+		Pattern quSpecialCase = Pattern.compile("qu"); // pattern for finding "qu" for moving both characters to the end
+		Matcher vowelMatcher, quMatcher, breakMatcher; // matchers for the word breaks, vowels, and "qu" case
+		int foundVowelIndex, foundQuIndex; // characters indices for the vowel and "qu"
+		boolean quCase = false; // says that the word has the "qu" special case
+		
+		StringBuilder pigLatinStringBuilder = new StringBuilder(); // builds the pig latin translation
+		breakMatcher = wordBreaks.matcher(string);
+		
+		for(int word = 0; word < splitString.length; word++) {
+			vowelMatcher = vowels.matcher(splitString[word]);
+			
+			// if a vowel is found, get the index of the vowel and check for the "qu" special case
+			if(vowelMatcher.find()) {
+				foundVowelIndex = vowelMatcher.start(); // get the index of the vowel
+				
+				quMatcher = quSpecialCase.matcher(splitString[word]);
+				quCase = false;
+				// if "qu" is found, check if the first vowel is the "u" in the "qu"
+				if(quMatcher.find()) {
+					foundQuIndex = quMatcher.start();
+					
+					if(foundQuIndex == foundVowelIndex - 1) {
+						quCase = true;
+					}
+				}
+				
+				// if this is a "qu" special case, bring the consonants and the "u" to the end and add "ay"
+				if(quCase) {
+					if(foundVowelIndex == splitString[word].length() - 1) {
+						tempString = splitString[word] + "ay";
+					}
+					else {
+						tempString = splitString[word].substring(foundVowelIndex + 1) + splitString[word].substring(0, foundVowelIndex + 1) + "ay";
+					}
+				}
+				// else, bring the consonants to the end and add "ay"
+				else {
+					if(foundVowelIndex == 0) {
+						tempString = splitString[word] + "ay";
+					}
+					else {
+						tempString = splitString[word].substring(foundVowelIndex) + splitString[word].substring(0, foundVowelIndex) + "ay";
+					}
+				}
+			}
+			// else, if the word is only consonants, add "ay" to the end
+			else {
+				tempString = splitString[word] + "ay";
+			};
+			
+			pigLatinStringBuilder.append(tempString);
+			
+			if(breakMatcher.find()) {
+				pigLatinStringBuilder.append(string.substring(breakMatcher.start(), breakMatcher.end()));
+			}
+		}
+		
+		return pigLatinStringBuilder.toString();
 	}
 
 	/**
@@ -442,9 +526,61 @@ public class EvaluationService {
 	 * @param l
 	 * @return
 	 */
-	public List<Long> calculatePrimeFactorsOf(long l) {
-		// TODO Write an implementation for this method declaration		
-		return null;
+	public List<Long> calculatePrimeFactorsOf(long l) throws IllegalArgumentException {
+		List<Long> primeFactors = new ArrayList<Long>();		
+		List<Long> primes = new ArrayList<Long>();
+		// add the first two prime numbers
+		primes.add(2L);
+		primes.add(3L);
+		
+		long reducedInput = l; // input value reduced by factorization
+		int primeIndex = 0;
+		// numbers less than 2 cannot have prime factors, throw an exception
+		if(l <= 1L) {
+			throw new IllegalArgumentException("Numbers less than 2 cannot have prime factors.");
+		}
+		else if(l == 2 || l == 3) {
+			primeFactors.add(l);
+		}
+		else {
+			while(reducedInput > 1) {
+				while(primeIndex < primes.size()) {
+					if(reducedInput % primes.get(primeIndex) == 0) {
+						reducedInput = reducedInput / primes.get(primeIndex);
+						primeFactors.add(primes.get(primeIndex));
+						primeIndex = 0;
+					}
+					else {
+						primeIndex++;
+					}
+				}
+				
+				if(reducedInput > 1) {
+					addNextPrime(primes);
+				}
+			}
+		}
+		
+		return primeFactors;
+	}
+	
+	public void addNextPrime(List<Long> primes) {
+		long nextTestValue = primes.get(primes.size() - 1) + 2;
+		double sqrtValue = Math.sqrt(nextTestValue);
+		int primeIndex = 0;
+		
+		while(primes.get(primeIndex) <= sqrtValue) {
+			if(nextTestValue % primes.get(primeIndex) == 0) {
+				nextTestValue = nextTestValue + 2;
+				sqrtValue = Math.sqrt(nextTestValue);
+				primeIndex = 0;
+			}
+			else {
+				primeIndex++;
+			}
+		}
+		
+		primes.add(nextTestValue);
 	}
 
 	/**
@@ -534,13 +670,47 @@ public class EvaluationService {
 	 * @return
 	 */
 	public int calculateNthPrime(int i) throws IllegalArgumentException {
-		// TODO Write an implementation for this method declaration
+		List<Integer> primes = new ArrayList<Integer>();
+		primes.add(2);
+		primes.add(3);
+		int nextTestValue;
+		int primeIndex;
+		double sqrtValue;
 		// throw an exception if the argument is a non-positive number
 		if(i <= 0) {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("Argument must be positive.");
+		}
+		else if(i == 1 || i == 2) {
+			return primes.get(i-1);
+		}
+		else {
+			while(primes.size() < i) {
+				
+				nextTestValue = primes.get(primes.size()-1) + 2; // next value after the last prime
+				sqrtValue = Math.sqrt(nextTestValue);
+				primeIndex = 0;
+				
+				while(primes.get(primeIndex) <= sqrtValue) {
+					
+					// if the tested value evenly divides with a previous prime, it is not prime
+					if(nextTestValue % primes.get(primeIndex) == 0) {
+						
+						nextTestValue = nextTestValue + 2; // next value
+						sqrtValue = Math.sqrt(nextTestValue); // new square root
+						primeIndex = 0; // reset to the start of the list
+						
+					}
+					// else, test against the next prime
+					else {
+						primeIndex++;
+					}
+				}
+				
+				primes.add(nextTestValue);
+			}
 		}
 		
-		return 0;
+		return primes.get(i-1);
 	}
 
 	/**
@@ -628,9 +798,11 @@ public class EvaluationService {
 		
 		public static Map<Character, Character> getEncodingAlphabet() {
 			Map<Character, Character> encodingAlphabet = new HashMap<Character, Character>();
+			// get the ASCII values to map the key-value pairs
 			int unencodedCharValue = (int)'a';
 			int encodedCharValue = (int)'z';
 			
+			// loop through the ASCII values
 			for(int l = 0; l < 26; l++) {
 				encodingAlphabet.put(Character.valueOf((char)unencodedCharValue), Character.valueOf((char)encodedCharValue));
 				unencodedCharValue++;
@@ -719,7 +891,7 @@ public class EvaluationService {
 	public boolean isPangram(String string) {
 		String trimmedString = string.replaceAll("\\W+", "").replaceAll("\\d+", "").toLowerCase();
 		Set<Character> foundLetters = new HashSet<Character>();
-		boolean pangram = false;
+		boolean isPangram = false;
 		int stringIndex = 0;
 		
 		// only check if the string is of greater than or equal length of the alphabet
@@ -730,7 +902,7 @@ public class EvaluationService {
 				if(foundLetters.add(Character.valueOf(trimmedString.charAt(stringIndex)))) {
 					// if all the letters are in the set, set pangram to true and break
 					if(foundLetters.size() == 26) {
-						pangram = true;
+						isPangram = true;
 						break;
 					}
 				}
@@ -740,7 +912,7 @@ public class EvaluationService {
 		}
 		
 		
-		return pangram;
+		return isPangram;
 	}
 
 	/**
@@ -847,10 +1019,8 @@ public class EvaluationService {
 						digitValue = digitValue - 9;
 					}
 				}
-				
 				sumOfDigits = sumOfDigits + digitValue;
-				
-				charIndex = charIndex--; // decrement to the previous character index
+				charIndex = charIndex - 1; // decrement to the previous character index
 			}
 			
 			if(sumOfDigits % 10 == 0) {
@@ -888,9 +1058,46 @@ public class EvaluationService {
 	 * @return
 	 */
 	public int solveWordProblem(String string) {
-		// TODO Write an implementation for this method declaration
+		String[] splitString = string.split("\\s+"); // split the string by whitespace
+		String tempString; // string to manipulate input in
+		String operatorString = ""; // holds the operator
+		int[] operands = new int[2];
+		int intCount = 0;
+		int result = 0;
+		Pattern operatorWords = Pattern.compile("^plus$|^minus$|^multiplied$|^divided$"); // check only for the four operator types
+		Pattern nonNumberRegex = Pattern.compile("[^+\\-\\d]"); // regex to remove non-number characters, plus the positive or negative sign
 		
-		return 0;
+		int word = 0;
+		while(word < splitString.length) {
+			if(Pattern.matches(operatorWords.pattern(), splitString[word])) {
+				operatorString = splitString[word];
+			}
+			else {
+				tempString = splitString[word].replaceAll(nonNumberRegex.pattern(), "");
+				if(!tempString.isEmpty()) {
+					operands[intCount] = Integer.parseInt(tempString);
+					intCount++;
+				}
+			}
+			word++;
+		}
+		
+		switch(operatorString) {
+			case "plus":
+				result = operands[0] + operands[1];
+				break;
+			case "minus":
+				result = operands[0] - operands[1];
+				break;
+			case "multiplied":
+				result = operands[0] * operands[1];
+				break;
+			case "divided":
+				result = operands[0] / operands[1];
+				break;
+		}
+		
+		return result;
 	}
 
 }
