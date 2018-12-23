@@ -38,7 +38,7 @@ public class EvaluationService {
 	 */
 	public String acronym(String phrase) {
 		Pattern nonWordRegex = Pattern.compile("\\W+");
-		String[] words = nonWordRegex.split(phrase); // split the words based the non-word regex
+		String[] words = nonWordRegex.split(phrase); // split the words based on the non-word regex
 		String acronym = "";
 		
 		for(int w = 0; w < words.length; w++) {
@@ -349,7 +349,7 @@ public class EvaluationService {
 			int rightIndex;
 			int middleIndex;
 			int compareValue;
-			int result = -1; // the item has not been found yet
+			int result = -1; // -1 indicates that the object was not found in the list
 			
 			if(sortedList.size() == 1) {
 				if(t.compareTo(sortedList.get(leftIndex)) == 0) {
@@ -359,7 +359,7 @@ public class EvaluationService {
 			else if(sortedList.size() > 1) {
 				rightIndex = sortedList.size() - 1;
 				
-				// continue until the item is found or the left index is greater than or equal to the right index
+				// continue until the item is found or the left index is greater than the right index
 				while(leftIndex <= rightIndex) {
 					middleIndex = ((rightIndex - leftIndex) / 2) + leftIndex;
 					compareValue = t.compareTo(sortedList.get(middleIndex));
@@ -539,10 +539,12 @@ public class EvaluationService {
 		if(l <= 1L) {
 			throw new IllegalArgumentException("Numbers less than 2 cannot have prime factors.");
 		}
+		// if input is 2 or 3, add input to the prime factors and return
 		else if(l == 2 || l == 3) {
 			primeFactors.add(l);
 		}
 		else {
+			// continue until the input has been reduced to 1
 			while(reducedInput > 1) {
 				while(primeIndex < primes.size()) {
 					if(reducedInput % primes.get(primeIndex) == 0) {
@@ -555,6 +557,7 @@ public class EvaluationService {
 					}
 				}
 				
+				// if all primes found so far have been tested and the input still needs to be reduced, find the next prime
 				if(reducedInput > 1) {
 					addNextPrime(primes);
 				}
@@ -565,22 +568,25 @@ public class EvaluationService {
 	}
 	
 	public void addNextPrime(List<Long> primes) {
-		long nextTestValue = primes.get(primes.size() - 1) + 2;
-		double sqrtValue = Math.sqrt(nextTestValue);
-		int primeIndex = 0;
+		long nextTestValue = primes.get(primes.size() - 1) + 2; // go to the next value above the last found prime
+		double sqrtValue = Math.sqrt(nextTestValue); // get the square of the test value
+		int primeIndex = 1; // start at 3 as no test values will be even
 		
+		// test primes up to and including the square root of the value
 		while(primes.get(primeIndex) <= sqrtValue) {
+			// if the value evenly divides with a prime, it is not prime
 			if(nextTestValue % primes.get(primeIndex) == 0) {
-				nextTestValue = nextTestValue + 2;
+				nextTestValue = nextTestValue + 2; // next value
 				sqrtValue = Math.sqrt(nextTestValue);
-				primeIndex = 0;
+				primeIndex = 1; // reset back to 3
 			}
+			// else, test next prime
 			else {
 				primeIndex++;
 			}
 		}
 		
-		primes.add(nextTestValue);
+		primes.add(nextTestValue); // add the new found prime to the list
 	}
 
 	/**
@@ -611,10 +617,12 @@ public class EvaluationService {
 	 */
 	static class RotationalCipher {
 		private int key;
+		private Map<Character, Character> rotatedCharMap;
 
 		public RotationalCipher(int key) {
 			super();
 			this.key = key;
+			rotatedCharMap = getRotatedCharMap(key);
 		}
 
 		public String rotate(String string) {			
@@ -622,30 +630,13 @@ public class EvaluationService {
 				return string;
 			}
 			
-			int lowerCaseLetterAValue = (int)'a';
-			int upperCaseLetterAValue = (int)'A';
-			int currentLetterValue;
-			int rotatedLetterValue;
 			char currentChar;
-			HashMap<Character, Character> rotationMap = new HashMap<Character, Character>();
 			StringBuilder rotatedStringBuilder = new StringBuilder(string.length());
-			
-			for(int l = 0; l < 26; l++) {
-				// rotate lowercase letter
-				currentLetterValue = lowerCaseLetterAValue + l;
-				rotatedLetterValue = lowerCaseLetterAValue + ((this.key + l) % 26);
-				rotationMap.put(Character.valueOf((char)currentLetterValue), Character.valueOf((char)rotatedLetterValue));
-				
-				// rotate uppercase letter
-				currentLetterValue = upperCaseLetterAValue + l;
-				rotatedLetterValue = upperCaseLetterAValue + ((this.key + l) % 26);
-				rotationMap.put(Character.valueOf((char)currentLetterValue), Character.valueOf((char)rotatedLetterValue));
-			}
-			
+							
 			for(int s = 0; s < string.length(); s++) {				
 				currentChar = string.charAt(s);
 				if(Character.isLetter(currentChar)) {
-					rotatedStringBuilder.append(rotationMap.get(Character.valueOf(currentChar)).charValue());
+					rotatedStringBuilder.append(rotatedCharMap.get(Character.valueOf(currentChar)).charValue());
 				}
 				else {
 					rotatedStringBuilder.append(currentChar);
@@ -655,6 +646,31 @@ public class EvaluationService {
 			return rotatedStringBuilder.toString();
 		}
 
+		
+		private Map<Character, Character> getRotatedCharMap(int key) {
+			Map<Character, Character> rotatedCharMap = new HashMap<Character, Character>();
+			
+			// ASCII values for characters
+			int lowerCaseLetterAValue = (int)'a';
+			int upperCaseLetterAValue = (int)'A';
+			int currentLetterValue;
+			int rotatedLetterValue;			
+			
+			// go through each character and add the pre-rotated and rotated characters to the map
+			for(int letter = 0; letter < 26; letter++) {
+				// rotate lowercase letter
+				currentLetterValue = lowerCaseLetterAValue + letter;
+				rotatedLetterValue = lowerCaseLetterAValue + ((this.key + letter) % 26);
+				rotatedCharMap.put(Character.valueOf((char)currentLetterValue), Character.valueOf((char)rotatedLetterValue));
+				
+				// rotate uppercase letter
+				currentLetterValue = upperCaseLetterAValue + letter;
+				rotatedLetterValue = upperCaseLetterAValue + ((this.key + letter) % 26);
+				rotatedCharMap.put(Character.valueOf((char)currentLetterValue), Character.valueOf((char)rotatedLetterValue));
+			}
+			
+			return rotatedCharMap;
+		}
 	}
 
 	/**
@@ -680,24 +696,27 @@ public class EvaluationService {
 		if(i <= 0) {
 			throw new IllegalArgumentException("Argument must be positive.");
 		}
+		// if the input is the first two primes, just return the value of the first two primes
 		else if(i == 1 || i == 2) {
 			return primes.get(i-1);
 		}
 		else {
+			// go through the primes until the nth prime is found
 			while(primes.size() < i) {
 				
 				nextTestValue = primes.get(primes.size()-1) + 2; // next value after the last prime
-				sqrtValue = Math.sqrt(nextTestValue);
-				primeIndex = 0;
+				sqrtValue = Math.sqrt(nextTestValue); // get the square root for the value to test
+				primeIndex = 1; // start with 3 as none of the tested values will be even
 				
+				// go through the primes until the square root value is reached
 				while(primes.get(primeIndex) <= sqrtValue) {
 					
 					// if the tested value evenly divides with a previous prime, it is not prime
 					if(nextTestValue % primes.get(primeIndex) == 0) {
 						
-						nextTestValue = nextTestValue + 2; // next value
-						sqrtValue = Math.sqrt(nextTestValue); // new square root
-						primeIndex = 0; // reset to the start of the list
+						nextTestValue = nextTestValue + 2; // next value to test
+						sqrtValue = Math.sqrt(nextTestValue); // new square root value
+						primeIndex = 1; // reset to 3
 						
 					}
 					// else, test against the next prime
@@ -706,11 +725,11 @@ public class EvaluationService {
 					}
 				}
 				
-				primes.add(nextTestValue);
+				primes.add(nextTestValue); // when a prime is found, add to the list
 			}
 		}
 		
-		return primes.get(i-1);
+		return primes.get(i-1); // return the last prime number found
 	}
 
 	/**
@@ -745,7 +764,7 @@ public class EvaluationService {
 		 * @return
 		 */
 		public static String encode(String string) {
-			Map<Character, Character> encodingAlphabet = AtbashCipher.getEncodingAlphabet();
+			Map<Character, Character> encodingAlphabet = AtbashCipher.getEncodingAlphabet(); // get the encoding map
 			
 			int groupSize = 5; // use the traditional group size of 5 letters
 			String trimmedString = string.replaceAll("\\W+", "").toLowerCase(); // remove all non-word characters and make all lowercase
@@ -753,6 +772,7 @@ public class EvaluationService {
 			char currentChar;
 			
 			for(int e = 0; e < trimmedString.length(); e++) {
+				// if the character index matches the group size, append a space character
 				if(e % groupSize == 0) {
 					encodedStringBuilder.append(' ');
 				}
@@ -768,7 +788,7 @@ public class EvaluationService {
 				}
 			}
 			
-			return encodedStringBuilder.toString().trim();
+			return encodedStringBuilder.toString().trim(); // trim to remove the leading space character
 		}
 
 		/**
@@ -778,8 +798,8 @@ public class EvaluationService {
 		 * @return
 		 */
 		public static String decode(String string) {
-			Map<Character, Character> decodingAlphabet = AtbashCipher.getEncodingAlphabet();
-			String trimmedString = string.replaceAll("\\s+", "");
+			Map<Character, Character> decodingAlphabet = AtbashCipher.getEncodingAlphabet(); // get the decoding alphabet
+			String trimmedString = string.replaceAll("\\s+", ""); // remove all the spaces from the encoded string
 			StringBuilder decodingStringBuilder = new StringBuilder(trimmedString.length());
 			char currentChar;
 			
@@ -889,20 +909,29 @@ public class EvaluationService {
 	 * @return
 	 */
 	public boolean isPangram(String string) {
-		String trimmedString = string.replaceAll("\\W+", "").replaceAll("\\d+", "").toLowerCase();
+		String trimmedString = string.replaceAll("\\W+", "").replaceAll("\\d+", "").toLowerCase(); // only care about letters
 		Set<Character> foundLetters = new HashSet<Character>();
 		boolean isPangram = false;
 		int stringIndex = 0;
+		int missedCharacters = 0; // number of characters that are repeated in the string
+		int maxAllowedMissedChars = trimmedString.length() - 26; // maximum allowed characters to be repeated
 		
-		// only check if the string is of greater than or equal length of the alphabet
+		// if the string is less than 26, it is not a pangram
 		if(trimmedString.length() >= 26) {
-			while(stringIndex < trimmedString.length()) {
-				
+			// go through the string
+			while(stringIndex < trimmedString.length()) {				
 				// if the letter was successfully added, check if the number of letters is equal to 26
 				if(foundLetters.add(Character.valueOf(trimmedString.charAt(stringIndex)))) {
 					// if all the letters are in the set, set pangram to true and break
 					if(foundLetters.size() == 26) {
 						isPangram = true;
+						break;
+					}
+				}
+				else {
+					missedCharacters++; // increment the number of repeated characters
+					// if the number of missed characters is over the max allowed, break as it is impossible for the string to be a pangram
+					if(missedCharacters > maxAllowedMissedChars) {
 						break;
 					}
 				}
@@ -1006,7 +1035,7 @@ public class EvaluationService {
 		int digitValue;
 		boolean isLuhn = false;
 		
-		// if no non-digit characters are found and the length is more than 1
+		// if no non-digit characters are found and the length is more than 1, validate the string
 		if(!matcher.find() && trimmedString.length() > 1) {
 			charIndex = trimmedString.length() - 1; // start at the last character index
 			for(int d = 0; d < trimmedString.length(); d++) {
@@ -1065,7 +1094,7 @@ public class EvaluationService {
 		int intCount = 0;
 		int result = 0;
 		Pattern operatorWords = Pattern.compile("^plus$|^minus$|^multiplied$|^divided$"); // check only for the four operator types
-		Pattern nonNumberRegex = Pattern.compile("[^+\\-\\d]"); // regex to remove non-number characters, plus the positive or negative sign
+		Pattern nonNumberRegex = Pattern.compile("[^+\\-\\d]"); // regex to remove non-number characters, excluding the positive or negative sign
 		
 		int word = 0;
 		while(word < splitString.length) {
@@ -1082,6 +1111,7 @@ public class EvaluationService {
 			word++;
 		}
 		
+		// perform operation based on the operator string
 		switch(operatorString) {
 			case "plus":
 				result = operands[0] + operands[1];
