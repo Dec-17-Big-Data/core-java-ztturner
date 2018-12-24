@@ -345,10 +345,8 @@ public class EvaluationService {
 		private List<T> sortedList;
 
 		public int indexOf(T t) {
-			int leftIndex = 0;
-			int rightIndex;
-			int middleIndex;
-			int compareValue;
+			int leftIndex = 0, rightIndex, middleIndex;
+			int compareValue; // value from the compareTo method
 			int result = -1; // -1 indicates that the object was not found in the list
 			
 			if(sortedList.size() == 1) {
@@ -567,6 +565,11 @@ public class EvaluationService {
 		return primeFactors;
 	}
 	
+	/**
+	 * This method takes a list of primes and finds the next prime to add to the list.
+	 * 
+	 * @param primes - the list of primes to add to
+	 */
 	public void addNextPrime(List<Long> primes) {
 		long nextTestValue = primes.get(primes.size() - 1) + 2; // go to the next value above the last found prime
 		double sqrtValue = Math.sqrt(nextTestValue); // get the square of the test value
@@ -622,7 +625,7 @@ public class EvaluationService {
 		public RotationalCipher(int key) {
 			super();
 			this.key = key;
-			rotatedCharMap = getRotatedCharMap(key);
+			rotatedCharMap = getRotatedCharMap();
 		}
 
 		public String rotate(String string) {			
@@ -646,8 +649,14 @@ public class EvaluationService {
 			return rotatedStringBuilder.toString();
 		}
 
-		
-		private Map<Character, Character> getRotatedCharMap(int key) {
+		/**
+		 * Returns a map of pre-rotated characters as the key and the post-rotated characters as the value
+		 * by getting the ASCII values of the characters, adding the letter counter, and
+		 * adding the key of the cipher for the rotated characters taking into account characters wrapping around.
+		 * 
+		 * @return - the map of the pre-rotated characters and their corresponding rotated characters
+		 */
+		private Map<Character, Character> getRotatedCharMap() {
 			Map<Character, Character> rotatedCharMap = new HashMap<Character, Character>();
 			
 			// ASCII values for characters
@@ -816,6 +825,12 @@ public class EvaluationService {
 			return decodingStringBuilder.toString();
 		}
 		
+		/**
+		 * Returns the encoding alphabet for the Atbash cipher by getting the ASCII values
+		 * of the lowercase 'a' and 'z' and looping through the values adding to a map
+		 * 
+		 * @return - the map of the unencoded characters and their respective encoded characters
+		 */
 		public static Map<Character, Character> getEncodingAlphabet() {
 			Map<Character, Character> encodingAlphabet = new HashMap<Character, Character>();
 			// get the ASCII values to map the key-value pairs
